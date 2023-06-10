@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+  backend:
+    build:
+      context: ./go-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+  mongo:
+    image: mongo:4.4.4-bionic
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: mongo --norc --quiet --host=localhost:27017 --eval "db.getMongo()"
+      interval: 30s
+      timeout: 2s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  mongo-data:

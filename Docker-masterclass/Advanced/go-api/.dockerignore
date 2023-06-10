@@ -1,0 +1,23 @@
+# Files and directories to exclude from the Docker image
+
+# Binary and build output
+/bin
+/vendor
+/.idea
+
+# Test and development files
+/.git
+/test
+/docker-compose.yml
+/.dockerignore
+README.md
+
+# Editor-specific files
+*.swp
+*.swo
+*.log
+*.bak
+*~
+
+# OS-specific temporary files
+.DS_Store
