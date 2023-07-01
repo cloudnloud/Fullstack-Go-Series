@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
+      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+  pre_build:
+    commands:
+      - echo log in to Amazon ECR...
+      - aws --version
+      - echo $AWS_DEFAULT_REGION
+      - $(aws ecr get-login --no-include-email --region us-east-1)
+      - FRONTEND_REPOSITORY_URI=411966300196.dkr.ecr.us-east-1.amazonaws.com/web-app
+      - BACKEND_REPOSITORY_URI=411966300196.dkr.ecr.us-east-1.amazonaws.com/go-api
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image.
+      - docker-compose build
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - docker-compose push
+      - echo write definitions file...
+      - printf '[{"name":"exp-code-pipeline","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json
